@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Stampin' in the graveyard</title>
+    <meta name="description" content="" />
+    <meta name="keywords" content="stampin" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <link rel='icon' href='assets/favicon/favicon.ico' type='image/x-icon' />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110.0/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110.0/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="js/tween.umd.js"></script>
+    <script src="js/1euro.js"></script>
+    <script src="js/Mach1SoundPlayer.js"></script>
+    <script src="js/Mach1Decode.js"></script>
+    <script src="js/libs/draco/DRACOLoader.js"></script>
+    <script src="js/M1SpatialAudioPlayer.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/scene.js"></script>
+    <script src="js/main.js"></script>
+
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            font-family: helvetica;
+            font-weight: normal;
+        }
+
+        body {
+            background-color: black;
+            color: white;
+            display: block;
+        }
+        a{
+            font-weight: 200;
+            color: plum;
+        }
+
+        .container {
+            margin: 10px 0;
+            padding: 20px 100px 0px 100px;
+        }
+
+        .center {
+            display: block;
+            margin: 0 auto;
+            width: auto;
+            height: 50vh;
+        }
+
+        h1,
+        h2,
+        p {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        p{
+            font-size:large;
+            line-height: 1.2em;
+        }
+
+        audio {
+            display: block;
+            margin: 0 auto;
+        }
+
+        footer {
+            bottom: 0;
+            width: 100%;
+            /* position: fixed; */
+            text-align: center;
+            font-style: italic;
+            font-size: 10px;
+            padding: 10px;
+        }
+
+        #audioContainer {
+            display: block;
+            color: white;
+            background-color: black;
+        }
+
+        #videoContainer {
+            display: none;
+            padding: 0 0px;
+            background-color: black;
+        }
+
+        #main {
+            display: none;
+        }
+
+        #scene {
+            opacity: 0;
+        }
+
+        #webcam {
+            display: none;
+        }
+
+        #info {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4em;
+        }
+
+        .wrapper {
+            padding-top: 10vh;
+            margin: 0 auto;
+
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+     
+    </style>
+</head>
+
+<body>
+    <!-- this will appear in the beginning -->
+    <!-- <div class="container">
+        <div id="intro">
+            <h1>Stampin' in the graveyard</h1>
+            <div>
+                <img class="center" src="assets/images/skull.jpeg"
+                    alt="A woman wearing the wonder woman outfit with skull head. Her right hand is lifted up with a hole inside. The background of the piece has galaxy and butterflies.">
+                <P style="color:gainsboro; font-size:small">Artwork by Alexis Price</P>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="audioContainer">
+      
+            <H2 id="guide">Let's begin here.</H2>
+            <audio id="audioPlayer" controls>
+                <source src="assets/audio/stamping_new_compressed.mp3" type="audio/mp3">
+                <div style="border: 1px solid gray ; padding: 8px ;">
+                    Sorry, your browser does not support the <audio> tag used in this demo.
+                </div>
+            </audio>
+        
+    </div> -->
+
+    <!-- window video -->
+    <video id="windowVideo" playsinline style="display:none">
+        <source src="assets/video/window.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+    </video>
+
+    <!-- overlayed video -->
+    <video id="overlayedVideo" playsinline style="display:none">
+        <source src="assets/video/overlayed.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+    </video>
+
+    <!-- this will be visible when audio playback ends -->
+    <div class="container" id="videoContainer">
+        <div id="main">
+            <div class="canvas-wrapper" id="scene"></div>
+            <div class="canvas-wrapper" id="webcam">
+                <canvas id="output"></canvas>
+                <video id="video" playsinline
+                    style="-webkit-transform: scaleX(-1); transform: scaleX(-1); visibility: hidden; width: auto; height: auto;"></video>
+            </div>
+        </div>
+        <div id="info">loading...</div>
+    </div>
+
+    <!-- <div id="endingScene" class="container" style="display:none">
+     <p>Thank you for joining us. </p>
+        </p>
+
+        <br>
+        <p> We invite you to create the images you saw in your journey, perhaps in a letter, or a drawing, or a
+            sculpture, or a photograph (whatever a photograph means to you). </p>
+            <p> We also invite you to share this on
+            Instagram with #StampinInTheGraveyard. Together, we will create a collage of images, all windows into the
+            last theatre on earth.
+        </p>
+        <br>
+        <p> See you on the other side.</p>
+
+    </div> -->
+</body>
+
+<footer id="footer">Proudly created by <a href="octavia.website">Octavia</a>.</footer>
+
+</html>
